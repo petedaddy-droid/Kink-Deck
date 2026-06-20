@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Critical for iOS viewport scaling and preventing accidental zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- Web App Manifest capabilities for iOS "Add to Home Screen" -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FREAK OR DRINK XXX</title>
+    <style>
+        @import url('https://googleapis.com');
+
+        :root {
+            --purple-dark: #120024;
+            --purple-mid: #32004f;
+            --neon-pink: #ff00ff;
+            --crimson: #8b0000;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-user-select: none; /* Prevents text selection during rapid tapping */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; /* Removes blue flash on tap */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, var(--purple-dark), #000);
+            color: #fff;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: rgba(128, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: calc(var(--safe-top) + 10px) 15px 15px;
+            font-size: 1.3em;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            border-bottom: 1px solid rgba(255, 0, 255, 0.2);
+        }
+
+        .players {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .player {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Flex Container optimized for iPhone Viewports */
+        #deck-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            perspective: 1200px;
+        }
+
+        /* Responsive card sizes perfectly scaling down for iPhone SE up to 15 Pro Max */
+        .card {
+            width: 85vw;
+            max-width: 335px;
+            height: 55vh;
+            max-height: 460px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 15px 35px rgba(255, 0, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, var(--purple-mid), #6a0dad);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, var(--crimson), #ff1493);
+            transform: rotateY(180deg);
+            overflow-y: auto; /* Fallback for exceptionally long text options */
+        }
+
+        .dare-content {
+            font-size: 1.2em;
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .devil {
+            font-size: 70px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+
+        /* Bottom Controls with Safe Area Cushioning */
+        .controls {
+            padding: 15px 15px calc(var(--safe-bottom) + 10px);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 14px 20px;
+            font-size: 0.95em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: filter 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-draw {
+            grid-column: span 2;
+            background: linear-gradient(90deg, #ff00ff, #bc00dd);
+            font-size: 1.1em;
+            padding: 16px 20px;
+        }
+
+        .btn-timer { background: #333; border: 1px solid #555; }
+        .btn-log { background: #222; border: 1px solid #444; }
+
+        #timer {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: #ffd700;
+            margin: 8px 0;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .log {
+            max-height: 80px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.7);
+            margin-top: 10px;
+            padding: 8px 12px;
+            text-align: left;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <header>FREAK OR DRINK <span style="color:var(--neon-pink);">XXX</span></header>
+    
+    <div class="players" id="playerDisplay" onclick="setupPlayers(true)">
+        <!-- Dynamic Tap-to-edit player section -->
+    </div>
+
+    <div id="deck-container">
+        <div class="card" id="mainCard" onclick="handleCardTap()">
+            <div class="card-inner card-front">
+                <div class="devil">😈</div>
+                <h2 style="font-family:'Creepster', cursive; font-size: 2.2em; margin:10px 0; letter-spacing:2px;">FREAK OR DRINK?</h2>
+                <p style="opacity: 0.7; font-size:0.9em; text-transform:uppercase; letter-spacing:1px;">Tap to Draw</p>
+            </div>
+            <div class="card-inner card-back">
+                <div class="dare-content" id="dareText"></div>
+                <p style="font-size: 0.65em; margin-top:25px; opacity:0.6; text-transform:uppercase; letter-spacing:2px; color: var(--neon-pink);">🔥 Freak or Drink 🔥</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div id="timer">60</div>
+        <div class="btn-group">
+            <button class="btn-draw" onclick="drawCard()">Draw New Card</button>
+            <button class="btn-timer" id="timerBtn" onclick="toggleTimer()">Start Timer</button>
+            <button class="btn-log" onclick="addLogEntry()">+ Log Action</button>
+        </div>
+        <div class="log" id="actionLog"></div>
+    </div>
+
+<script>
+    let players = ["Pete", "Summer", "Alex"];
+    let currentDare = "";
+    let timeLeft = 60;
+    let timerInterval = null;
+
+    // Web Audio API Synth to replace native device haptic engine feedback 
+    function triggerHapticFeedback() {
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(60, ctx.currentTime); 
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.05);
+        } catch(e) {}
+    }
+
+    function setupPlayers(forcePrompt = false) {
+        // LocalStorage ensures player data stays intact if application minimizes on iOS
+        const stored = localStorage.getItem('fod_players');
+        if (stored && !forcePrompt) {
+            players = JSON.parse(stored);
+            renderPlayers();
+            return;
+        }
+
+        const names = prompt("Enter 3 player names (separated by commas):", players.join(", "));
+        if (names) {
+            const parsed = names.split(",").map(n => n.trim()).filter(n => n.length > 0);
+            if (parsed.length >= 3) {
+                players = parsed.slice(0, 3);
+            } else {
+                players = [...parsed, "Player 2", "Player 3"].slice(0,3);
+            }
+            localStorage.setItem('fod_players', JSON.stringify(players));
+        }
+        renderPlayers();
+    }
+
+    function renderPlayers() {
+        const container = document.getElementById('playerDisplay');
+        container.innerHTML = players.map((p, i) => 
+            `<div class="player" style="background: hsl(${i * 120}, 65%, 35%)">${p}</div>`
+        ).join('');
+    }
+
+    const dares = [
+        "The group chooses one person to give a lap dance to another for 60 seconds.",
